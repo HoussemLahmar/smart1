@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Détails de la {{ zone }}</h2>
+{% if data.error %}
+  <div class="alert alert-danger">{{ data.error }}</div>
+{% else %}
+  <ul>
+    <li><b>Température :</b> {{ data.temperature or '-' }} °C</li>
+    <li><b>Humidité :</b> {{ data.humidite or '-' }} %</li>
+    <li><b>LDR1 :</b> {{ data.ldr1 or '-' }}</li>
+    <li><b>LDR2 :</b> {{ data.ldr2 or '-' }}</li>
+    <li><b>POMPE :</b> <span style="color:{{ 'green' if data.pump else 'red' }}">{{ 'ON' if data.pump else 'OFF' }}</span></li>
+  </ul>
+  <form id="irrigate-form">
+    <input type="number" name="minutes" min="1" max="60" value="10">
+    <button class="btn btn-success" type="submit">Irriguer</button>
+  </form>
+  <a href="{{ url }}" target="_blank" class="btn btn-info mt-2">Accès dashboard local</a>
+  <script>
+    document.getElementById('irrigate-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      fetch("/api/irrigate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({zone: "{{zone}}", minutes: this.elements['minutes'].value})
+      }).then(r => r.json()).then(data => alert(data.msg || "Commande envoyée"));
+    });
+    // Pour l'affichage en mode AJAX (tableau général)
+    if(window.location.search.includes('json=1')) {
+      let d = {{ data|tojson }};
+      let resp = {
+        humidite: d.humidite, temperature: d.temperature,
+        ldr1: d.ldr1, ldr2: d.ldr2, pump: d.pump
+      };
+      document.body.innerHTML = JSON.stringify(resp); // Pour fetch() du tableau
+    }
+  </script>
+{% endif %}
+{% endblock %}

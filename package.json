@@ -1,0 +1,12 @@
+{
+  "name": "mon-app-irrigation",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "react-scripts build"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0"
+  }
+}

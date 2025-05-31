@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Toutes les zones</h2>
+<!-- Commande globale -->
+<div class="mb-3">
+  <form id="global-irrigate-form" class="d-inline">
+    <input type="number" id="global-minutes" name="minutes" min="1" max="60" value="10" style="width:54px">
+    <button class="btn btn-primary" type="submit">Irriguer toutes les zones</button>
+  </form>
+</div>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Zone</th>
+      <th>Lien direct</th>
+      <th>Dernière Humidité</th>
+      <th>Dernière Température</th>
+      <th>Dernier LDR1</th>
+      <th>Dernier LDR2</th>
+      <th>POMPE</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for zone in zones %}
+    <tr id="row-{{zone}}">
+      <td><a href="{{ url_for('zone_detail', zone=zone) }}">{{ zone }}</a></td>
+      <td><a href="{{ zone_urls[zone] }}" target="_blank">Dashboard local</a></td>
+      <td class="humidite"></td>
+      <td class="temperature"></td>
+      <td class="ldr1"></td>
+      <td class="ldr2"></td>
+      <td class="pump"></td>
+      <td>
+        <form class="inline-irrigate" data-zone="{{ zone }}">
+          <input type="number" name="minutes" min="1" max="60" value="10" style="width:54px">
+          <button class="btn btn-sm btn-success" type="submit">Irriguer</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<script>
+const zones = {{ zones|tojson }};
+function updateTable() {
+  zones.forEach(zone => {
+    fetch("/zone/" + zone + "?json=1")
+      .then(r => r.json())
+      .then(data => {
+        let row = document.getElementById("row-"+zone);
+        if(row) {
+          row.querySelector(".humidite").textContent = data.humidite ?? "-";
+          row.querySelector(".temperature").textContent = data.temperature ?? "-";
+          row.querySelector(".ldr1").textContent = data.ldr1 ?? "-";
+          row.querySelector(".ldr2").textContent = data.ldr2 ?? "-";
+          row.querySelector(".pump").innerHTML = data.pump ? "<b style='color:green'>ON</b>" : "<span style='color:red'>OFF</span>";
+        }
+      });
+  });
+}
+setInterval(updateTable, 10000); updateTable();
+
+document.querySelectorAll('.inline-irrigate').forEach(form => {
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    let zone = this.getAttribute('data-zone');
+    let minutes = this.elements['minutes'].value;
+    fetch("/api/irrigate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({zone, minutes})
+    }).then(r => r.json()).then(data => alert(data.msg || "Commande envoyée"));
+  });
+});
+
+// Commande globale "Irriguer toutes les zones"
+document.getElementById('global-irrigate-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  let minutes = document.getElementById('global-minutes').value;
+  let promises = zones.map(zone =>
+    fetch("/api/irrigate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({zone, minutes})
+    }).then(r => r.json())
+  );
+  Promise.all(promises).then(results => {
+    alert("Commande envoyée à toutes les zones !");
+  });
+});
+</script>
+{% endblock %}

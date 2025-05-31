@@ -1,0 +1,21 @@
+mqtt:
+  broker: "192.168.1.99"
+  port: 1883
+  user: "mqtt_user"
+  password: "mqtt_pass"
+  topics:
+    capteurs: "oliveraie/capteurs/#"
+    zones: "oliveraie/zones/#"
+
+database:
+  type: "influxdb"
+  influxdb_url: "http://192.168.1.99:8086"
+  influxdb_token: "YOUR_INFLUXDB_TOKEN"
+  influxdb_org: "votre_org"
+  influxdb_bucket: "oliveraie"
+  sqlite_path: "oliveraie.db"
+
+weather:
+  provider: "open-meteo"
+  lat: 35.23
+  lon: 10.45

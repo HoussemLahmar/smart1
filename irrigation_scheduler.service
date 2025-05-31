@@ -1,0 +1,11 @@
+[Unit]
+Description=Irrigation Schedule Worker
+
+[Service]
+ExecStart=/usr/bin/python3 /chemin/vers/irrigation_scheduler.py
+Restart=on-failure
+User=irrigation
+WorkingDirectory=/chemin/vers/le/projet
+
+[Install]
+WantedBy=multi-user.target
